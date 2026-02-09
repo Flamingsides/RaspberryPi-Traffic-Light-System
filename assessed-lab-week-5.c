@@ -51,15 +51,17 @@ int main(int argc, char *argv[]) {
 
     // Blink red light
     while (1) {
+        printf("LOG: RED_LED high\n");
         // Set RED_LED (10) to high
-        *(gpio + GPSET_OFF) = 0b1;
+        *(gpio + GPSET_OFF) = 0b10000000000;
 
         // Halt program for $DELAY microseconds
         // Reference: https://pubs.opengroup.org/onlinepubs/009696899/functions/usleep.html
         usleep(DELAY);
         
+        printf("LOG: RED_LED low\n");
         // Clear RED_LED (set to low)
-        *(gpio + GPCLR_OFF) = 0b1;
+        *(gpio + GPCLR_OFF) = 0b10000000000;
 
         // Delay
         usleep(DELAY);
