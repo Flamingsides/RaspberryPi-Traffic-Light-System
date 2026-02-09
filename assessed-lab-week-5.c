@@ -23,13 +23,14 @@
 // Delay in microseconds for in-between phases (500ms)
 #define DELAY 500000
 
+volatile uint32_t *gpio;
 unsigned short getGpio();
+void gpioSet(const int offset, int value);
 
 int main(int argc, char *argv[]) {
     // Getting an address to the device memory mapped to gpio
     printf("LOG: Getting gpio\n");
-    volatile uint32_t *gpio;
-    unsigned short result = getGpio(gpio);
+    unsigned short result = getGpio();
 
     switch (result) {
         case 1:
@@ -68,11 +69,11 @@ int main(int argc, char *argv[]) {
 }
 
 // Function to memory-map "/dev/mem" to an gpio
-unsigned short getGpio(volatile uint32_t *gpio) {
-    printf("LOG: Opening \"/dev/gpiomem\" now\n");
+unsigned short getGpio() {
+    printf("LOG: Opening \"/dev/mem\" now\n");
     // Opening the /dev/memory device to map it to gpio
     int fileDescriptor = open(
-        "/dev/gpiomem", // Address where memory exists
+        "/dev/mem", // Address where memory exists
         O_RDWR | O_SYNC | O_CLOEXEC // Flags: Read/Write mode + syncronised data access + close upon execution
     );
 
@@ -100,4 +101,9 @@ unsigned short getGpio(volatile uint32_t *gpio) {
 
     // Success
     return 0;
+}
+
+// Function to set pins to high
+void gpioSet(const int offset, int value) {
+    *(gpio + offset) = value;
 }
