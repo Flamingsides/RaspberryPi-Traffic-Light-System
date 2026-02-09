@@ -20,8 +20,21 @@
 #define GPSET_OFF 7
 #define GPCLR_OFF 10
 
+// Macros for output mode
+#define GPFSEL_OPTIONS 0b000001000001001
+
 // Delay in microseconds for in-between phases (500ms)
-#define DELAY 500000
+#define DELAY  1000000
+// Delay for which traffic light should be green/red
+#define PAUSE 5000000
+
+enum States {
+    RED_TOGGLE =    0b000010000000000,
+    YELLOW_TOGGLE = 0b000100000000000,
+    GREEN_TOGGLE =  0b010000000000000,
+    BUTTON_INPUT =  0b100000000000000
+    RED_YELLOW_TOGGLE = RED_TOGGLE | YELLOW_TOGGLE,
+};
 
 volatile uint32_t *gpio;
 unsigned short getGpio();
@@ -46,25 +59,44 @@ int main(int argc, char *argv[]) {
     printf("LOG: Setting mode for each pin\n");
     
     // Set output mode forGPIO pins 10, 11, and 13
-    printf("*(gpio+1): %b", *(gpio + GPFSEL_OFF));
-    *(gpio + GPFSEL_OFF) = 0b001000001001;
+    // *(gpio + GPFSEL_OFF) = 0b001000001001;
+    gpioSet(GPFSEL_OFF, GPFSEL_OPTIONS);
+
+    // Clear all pins just in case
+    gpioSet(GPCLR_OFF, 0b111111111111111111111111111111111);
 
     // Blink red light
     while (1) {
         printf("LOG: RED_LED high\n");
         // Set RED_LED (10) to high
-        *(gpio + GPSET_OFF) = 0b10000000000;
+        //*(gpio + GPSET_OFF) = 0b10000000000;
+        gpioSet(GPSET_OFF, RED_TOGGLE);
 
         // Halt program for $DELAY microseconds
         // Reference: https://pubs.opengroup.org/onlinepubs/009696899/functions/usleep.html
-        usleep(DELAY);
-        
-        printf("LOG: RED_LED low\n");
-        // Clear RED_LED (set to low)
-        *(gpio + GPCLR_OFF) = 0b10000000000;
+        usleep(PAUSE);
 
-        // Delay
+        // Turn on yellow and delay
+        gpioSet(GPSET_OFF, YELLOW_TOGGLE);
         usleep(DELAY);
+
+        // Turn off red and yellow and turn on green
+        gpioSet(GPCLR_OFF, RED_YELLOW_TOGGLE);
+        gpioSet(GPSET_OFF, GREEN_TOGGLE);
+        
+        for (int i = 0, n = PAUSE / 10000; i < n; i++) {
+            if ()
+        }
+        usleep(PAUSE);
+
+        // Turn off green and get yellow to blink for 5 times
+        gpioSet(GPCLR_OFF, GREEN_TOGGLE);
+        for (int i = 0; i < 5; i++) {
+            gpioSet(GPSET_OFF, YELLOW_TOGGLE);
+            usleep(300000); // 600ms between blink
+            gpioSet(GPCLR_OFF, YELLOW_TOGGLE);
+            usleep(300000); // 600ms between blink
+        }
     }
     
     return 0;
@@ -108,4 +140,8 @@ unsigned short getGpio() {
 // Function to set pins to high
 void gpioSet(const int offset, int value) {
     *(gpio + offset) = value;
+}
+
+int gpioGet(const int offset, int value) {
+    return 
 }
